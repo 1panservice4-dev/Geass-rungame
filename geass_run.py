@@ -38,6 +38,7 @@ def play_geass_run():
         @keyframes shake { 0%, 100% { transform: translate(0,0); } 25% { transform: translate(5px, 5px); } 75% { transform: translate(-5px, -5px); } }
         .shaking { animation: shake 0.1s 5; }
     </style>
+    """
     </head>
     <body onload="document.getElementById('game-area').focus()">
     <div id="game-area" tabindex="0">
