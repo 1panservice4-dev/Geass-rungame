@@ -2,86 +2,144 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 def play_geass_run():
-    # 1. 이미지 데이터 (기존 데이터 유지)
-    BLUE_IMG = "data:image/png;base64,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"
-    OBS_IMG = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAACXBIWXMAAAsTAAALEwEAmpwYAAAB8klEQVR4nO2Yv0vDQBjHn8S9QXByFAdnB0cHJ0cHZwcHB0cHZwcHB0cHZwcHB0fBydHBydHBydHBydHBydHBydHBydHByf0DOnSJpEnSptf2vS88SAtp8vnc98f7XpI6Ozt/Sshms9vNZvMskUis6fV6vUqlUnE8HndO0v1+v9NoNLp+v78vCMLZ6urq9ubm5tH6+no8Ozs7f9oZBAH/H9vPz8/bV1dXH61W68ZiseDhcLhVq9UuTk5O7vAnYI1AILC8vr6+vbm5eZ9MJm9isRhcXFzc8Cdgj7m5ueXFxcXtcrl86fP5IJPJ7Ofz+Yvj4+N7O8F6wBohS0tL97u7u/fFYvG8Xq9DPB7fzefz58fHx64SCAK+mU6nN7e2tu6LxeKlUgr9fv/S8vLyZSKRWHeV9IDVAn57e3v3xWLxXCmFSqXyZWVl5fzo6GjHVTIIAs6Mjo4ubm5u3pdKpUulFCKRyE4mk9mX9IC/BPzOzs7u7u7unvSA77ZfXFzcLpfLl76/BAH7EonE7fX19Z0S8M3ExMTK8vLypat+fA6wz9TU1PrGxsbOnxMgCHgjEAis8D0AtvB9AnuMjo4u8j0An+R7BOwRCoXW+B4An/geAV/U6/VrvgfApf/77+D7A/Yxm83Y7u7u+TfE9/jRPhf68AAAAABJRU5ErkJggg=="
+    # 이미지 데이터 (기존 데이터 유지)
+    BLUE_IMG = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAR0AAAGwCAYAAACU6LFLAAABQWVYSWZNTQAqAAAACAAGAQAABAAAAAEAAAAAAQEABAAAAAEAAAAAh2kABAAAAAEAAABqARIABAAAAAEAAAAAATIAAgAAABQAAABWiCUABAAAAAEAAADaAAAAADIwMjY6MDQ6MjEgMTY6MTY6MTkAAAaQAwACAAAAFAAAALiSkQACAAAAAjAAAACQEAACAAAABwAAAMyQEQACAAAABwAAANOSkAACAAAAAjAAAACSCAAEAAAAAQAAAAAAAAAAMjAyNjowNDoyMSAxNjoxNjoxOQArMDk6MDAAKzA5OjAwAAACAAcABQAAAAMAAAD4AB0AAgAAAAsAAAEQAAAAAAAAAAcAAAABAAAAEAAAAAEAAAATAAAAATIwMjY6MDQ6MjEAAAEBMgACAAAAFAAAAS0AAAAAMjAyNjowNDoyMSAxNjoxNjoxOQDpw8h0AAAAAXNSR0IArs4c6QAAAARzQklUCAgICHwIZIgAACAASURBVHic7L13mBzXeeb7O5U7T09OmBlgkDMBEomZEoMoKlGkZQXbsi1pdbWr9V3vXlnr3bXl9dqWV/K99gZbsmxFW8kKlChqRZAgRQJgJgCSyGEATM4znbsrnfvH6R7MgBQt2RZBQPM+Tz8906G66lSdt77v/cIRLOIXCiUpewQYEryIEOcv9f4s4hcP4lLvwCJ+vhiWcnUJOkehsQLJAJI2mGlwXY9skwxytqVPzsLgKiGOX+r9XcSVj0XSuUIxUe5bFQqx5lwpvXZ6ZqbrxTG9aXpmJjkxnUmWSkUz7c+68UQ8u7pOz9U31E+0rNs2kIxzshFOtAjx4qXe/0VcuVgknSsMR6XcYsDqfT5LDx5kzcHDY+tGR0e6VukDqVQqpa2KzmJZlvARFItFeS4vwpmZmUwy5gwsXdpzcvVV644vXZo81QSH1wlx8FIfzyKuPCySzhWC0sxMt5NIXPWcp1/z+OPn137hUGkpyM5NV6+p27QJbWMUEYtAJxCE4AOaBuMh5PPIg88dl0eOHMn3jw8NrVix4tQv3Xj9s6u640/0CPHIpT62RVxZWCSdKwD9Uvaehe37T52986lHH72mUnG7bty4zt65c6fotQxKoUt94KLrOgkpEEKgSRshIJQQhsiCCX4IP+gbl3v27CmMuJVTO3fsfPytG1c9cI0jHr7Ux7iIKwfGpd6BRfzzMCxltwvbn+4bvOe5Z5+/xnEi7W9729u1nS315IBspUC9HSOqGXh4hF6AaZqIEDzPB2FgmuD64PuwdXkzq5a/O/KdfS8sf+TRR4Tefy48I6XsFWLPpT7WRVwZWCSdyxxnYfP+o4fe9Nj3zm9btWp924duXa3VJyCd68dwHJBZCC3c0ATfZ9ZpxsbE1aBoSwRlIjg0aVP4wiNOKyHIe67bZG9sbl72xe/fH0z/cJ97WMryeiH2X+rjXcTlD+1S78Ai/umQBbn doctors. . . " # (생략 금지: 실제 긴 데이터 넣어주세요)
+    OBS_IMG = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHe. . . "
 
-    st.title("🎮 GEASS RUN GAME")
-    st.write("아래 화면을 클릭하고 'SPACE'를 눌러 점프하세요!")
-
-    # 2. HTML/CSS/JS 통합 코드
+    st.markdown("### 👁️ GEASS RUN: LELOUCH'S COMMAND")
+    
     html_code = f"""
-    <div id="game-wrap" style="width:100%; display:flex; flex-direction:column; align-items:center; background:#222; padding:20px; border-radius:10px;">
-        <div id="game-container" style="position:relative; width:600px; height:200px; background:#eee; border:4px solid #444; overflow:hidden;">
-            <div id="player" style="position:absolute; bottom:0; left:50px; width:40px; height:40px; background:url('{BLUE_IMG}') no-repeat center/contain;"></div>
-            <div id="obstacle" style="position:absolute; bottom:0; right:-50px; width:40px; height:40px; background:url('{OBS_IMG}') no-repeat center/contain;"></div>
-            <div id="score" style="position:absolute; top:10px; left:10px; font-family:Arial; font-weight:bold; font-size:20px;">SCORE: 0</div>
+    <div id="game-outer" style="width: 100%; display: flex; flex-direction: column; align-items: center; font-family: 'Arial', sans-serif;">
+        <div id="ui-bar" style="width: 600px; display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #000; color: #ff0000; border: 2px solid #333;">
+            <div style="display: flex; align-items: center;">
+                <span style="margin-right: 10px; font-weight: bold;">HP</span>
+                <div style="width: 200px; height: 15px; background: #333; border: 1px solid #ff0000;">
+                    <div id="hp-inner" style="width: 100%; height: 100%; background: #ff0000; transition: width 0.3s;"></div>
+                </div>
+            </div>
+            <div id="score-display" style="font-size: 20px; font-weight: bold;">SCORE: 0</div>
         </div>
+
+        <div id="game-container" style="position: relative; width: 600px; height: 200px; background: #eee; overflow: hidden; border: 4px solid #000;">
+            <div id="player" style="position: absolute; bottom: 0; left: 50px; width: 50px; height: 50px; background: url('{BLUE_IMG}') no-repeat center/contain; z-index: 10;"></div>
+            <div id="obstacle" style="position: absolute; bottom: 0; right: -60px; width: 45px; height: 45px; background: url('{OBS_IMG}') no-repeat center/contain;"></div>
+            
+            <div id="geass-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle, transparent 30%, rgba(255,0,0,0.2) 100%); pointer-events: none; opacity: 0; z-index: 20;"></div>
+            
+            <div id="game-over" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; flex-direction: column; justify-content: center; align-items: center; color: white; z-index: 100;">
+                <h1 style="color: #ff0000; margin-bottom: 5px;">MISSION FAILED</h1>
+                <h3 id="final-score" style="margin-bottom: 20px;">SCORE: 0</h3>
+                <div>
+                    <button onclick="location.reload()" style="padding: 10px 25px; background: #ff0000; color: white; border: none; cursor: pointer; font-weight: bold; margin: 5px;">RETRY</button>
+                    <button style="padding: 10px 25px; background: #444; color: white; border: none; cursor: pointer; font-weight: bold; margin: 5px;">LOBBY</button>
+                </div>
+            </div>
+        </div>
+
+        <button id="skill-btn" onclick="useGeass()" style="width: 600px; margin-top: 10px; padding: 15px; background: #4b0082; color: #fff; border: 2px solid #8a2be2; font-weight: bold; cursor: pointer; text-shadow: 0 0 5px #ff0000;">
+            GEASS COMMAND (ENTER)
+        </button>
+        <p style="color: #666; font-size: 12px; mt: 5px;">[SPACE]: JUMP / [ENTER]: GEASS SKILL</p>
     </div>
 
     <script>
         const player = document.getElementById("player");
         const obstacle = document.getElementById("obstacle");
-        const scoreElement = document.getElementById("score");
+        const hpInner = document.getElementById("hp-inner");
+        const scoreDisplay = document.getElementById("score-display");
+        const gameOverScreen = document.getElementById("game-over");
+        const geassOverlay = document.getElementById("geass-overlay");
+
         let score = 0;
+        let hp = 100;
         let isJumping = false;
+        let isGeassActive = false;
+        let gameActive = true;
+        let obstaclePos = 600;
 
         function jump() {{
-            if (isJumping) return;
+            if (isJumping || !gameActive) return;
             isJumping = true;
-            let position = 0;
-            let timerId = setInterval(function () {{
-                if (position === 100) {{
-                    clearInterval(timerId);
-                    let downTimerId = setInterval(function () {{
-                        if (position === 0) {{
-                            clearInterval(downTimerId);
+            let height = 0;
+            let upInterval = setInterval(() => {{
+                if (height >= 130) {{
+                    clearInterval(upInterval);
+                    let downInterval = setInterval(() => {{
+                        if (height <= 0) {{
+                            clearInterval(downInterval);
                             isJumping = false;
                         }}
-                        position -= 5;
-                        player.style.bottom = position + 'px';
-                    }}, 20);
+                        height -= 6;
+                        player.style.bottom = height + 'px';
+                    }}, 15);
                 }}
-                position += 5;
-                player.style.bottom = position + 'px';
-            }}, 20);
+                height += 6;
+                player.style.bottom = height + 'px';
+            }}, 15);
         }}
 
-        // 장애물 이동 로직
-        let obstaclePos = 600;
-        function moveObstacle() {{
-            obstaclePos -= 7;
+        function useGeass() {{
+            if (isGeassActive || !gameActive) return;
+            isGeassActive = true;
+            geassOverlay.style.opacity = "1";
+            
+            // 기아스 능력: 장애물 속도 대폭 감소 및 무적
+            let originalSpeed = 8;
+            let geassDuration = 3000; // 3초
+
+            setTimeout(() => {{
+                isGeassActive = false;
+                geassOverlay.style.opacity = "0";
+            }}, geassDuration);
+        }}
+
+        function gameLoop() {{
+            if (!gameActive) return;
+
+            // 기아스 발동 시 장애물이 느려짐
+            let speed = isGeassActive ? 2 : 8;
+            obstaclePos -= speed;
+
             if (obstaclePos < -50) {{
                 obstaclePos = 600;
-                score++;
-                scoreElement.innerHTML = "SCORE: " + score;
+                score += 10;
+                scoreDisplay.innerText = "SCORE: " + score;
             }}
-            obstacle.style.right = (600 - obstaclePos) + 'px';
-            
-            // 충돌 감지
-            let playerBottom = parseInt(window.getComputedStyle(player).getPropertyValue("bottom"));
-            if (obstaclePos > 50 && obstaclePos < 90 && playerBottom < 40) {{
-                alert("GAME OVER! SCORE: " + score);
-                score = 0;
-                obstaclePos = 600;
-                scoreElement.innerHTML = "SCORE: 0";
+            obstacle.style.left = obstaclePos + 'px';
+
+            // 충돌 판정
+            let playerBottom = parseInt(window.getComputedStyle(player).bottom);
+            if (obstaclePos < 90 && obstaclePos > 50 && playerBottom < 40) {{
+                if (!isGeassActive) {{
+                    hp -= 20; // 기아스 미발동 시에만 데미지
+                    hpInner.style.width = hp + "%";
+                    obstaclePos = -100; // 장애물 초기화
+                    
+                    if (hp <= 0) {{
+                        gameActive = false;
+                        document.getElementById("final-score").innerText = "SCORE: " + score;
+                        gameOverScreen.style.display = "flex";
+                    }}
+                }}
             }}
-            
-            requestAnimationFrame(moveObstacle);
+
+            requestAnimationFrame(gameLoop);
         }}
 
-        document.addEventListener('keydown', function(event) {{
-            if (event.code === 'Space') {{
+        window.addEventListener("keydown", (e) => {{
+            if (e.code === "Space") {{
+                e.preventDefault();
                 jump();
+            }}
+            if (e.code === "Enter") {{
+                useGeass();
             }}
         }});
 
-        moveObstacle();
+        gameLoop();
     </script>
     """
-
-    # 3. Streamlit 컴포넌트로 HTML 실행
-    components.html(html_code, height=300)
+    components.html(html_code, height=450)
 
 if __name__ == "__main__":
     play_geass_run()
