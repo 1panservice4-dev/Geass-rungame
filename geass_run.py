@@ -10,7 +10,7 @@ def play_geass_run():
 
     game_html = f'''
     <!DOCTYPE html>
-    <html>
+    <html> = """
     <head>
     <style>
         #game-area { width: 600px; height: 350px; position: relative; font-family: "Malgun Gothic", sans-serif; background: #111; overflow: hidden; border-radius: 12px; user-select: none; outline:none; }
