@@ -17,7 +17,7 @@ CUTIN_FILES = {
     'purple': 'images (2).jpeg',
     'green': 'MFay8JcfL1LlgyCi-tJSfrP8gHXHfSVagbP-SuvqqWQ-4PxJOQe_v4YeudlvLIQomwbYyUhoDSpGbLKPNrKeXA.webp'
 }
-OBS_FILE = '샤를 로켓.PNG'
+OBS_FILE = '샤를 로켓.png'
 BGM_FILE = '1776756741121Converted.mp3'
 LOBBY_BG = 'uRvTq_pxvdDatefZ10LZQ8HYFRyGV7cMbZzc7V_T0kdIezPlKAm-dyajjfSRE3hdXzJfckt1pgLUOXAxolQP-Q.jpg'
 
