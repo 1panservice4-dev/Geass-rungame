@@ -4,20 +4,35 @@ import base64
 import os
 import json
 
-# 페이지 설정
-st.set_page_config(page_title="GEASS RUN", layout="centered")
+# --- 여기서부터 ---
+# 1. 파일 설정 (GitHub에 올린 파일명과 100% 일치해야 함)
+char_files = {
+    'blue': 'Blue.png',
+    'red': 'Red.png',
+    'purple': 'Purple.png',
+    'green': 'Green.png'
+}
+cutin_files = {
+    'blue': 'Blue cutin',
+    'red': 'Red cutin', # 예시: 파일명을 짧게 고쳐서 올렸다면 그 이름으로!
+    'purple': 'Purple cutin',
+    'green': 'Green_cutin'
+}
+obs_file = '샤를 로켓.PNG'
+bgm_file = 'Colors.mp3'
+lobby_bg_file = 'lobby_bg.jpg' # 예시: 드라이브의 긴 이름 대신 짧은 이름 권장
 
 def get_b64(path):
-    """파일 경로에서 base64 데이터를 추출 (파일이 없을 경우 빈 문자열 반환)"""
+    """현재 폴더(GitHub 저장소)에서 파일을 찾아 Base64로 변환"""
     if not os.path.exists(path): 
         return ""
     with open(path, 'rb') as f:
         ext = path.split('.')[-1].lower()
-        if ext == 'webp': mime = "image/webp"
-        elif ext in ['png', 'jpg', 'jpeg']: mime = "image/png"
-        elif ext == 'mp3': mime = "audio/mp3"
-        else: mime = "application/octet-stream"
+        mime = "image/webp" if ext == 'webp' else "image/png" if ext in ['png','jpg','jpeg'] else "audio/mp3"
         return f"data:{mime};base64," + base64.b64encode(f.read()).decode('utf-8')
+# --- 여기까지 교체 ---
+
+# 이후 imgs = {...} 부터 시작하는 게임 로직은 그대로 두시면 됩니다.
 
 # 1. 파일 설정 (기존 경로 그대로 사용)
 char_files = {
