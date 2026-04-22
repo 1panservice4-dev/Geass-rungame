@@ -1,0 +1,159 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>GEASS RUN - Fixed Edition</title>
+    <style>
+        :root { --st-bg: #ffffff; --st-sidebar: #f0f2f6; --st-accent: #ff4b4b; }
+        body { margin: 0; background: var(--st-sidebar); display: flex; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif; overflow: hidden; }
+        #main-wrapper { width: 700px; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        #game-area { width: 100%; height: 400px; background: #000; position: relative; overflow: hidden; border-radius: 8px; outline: none; }
+        .overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; color: white; text-align: center; }
+        #lobby-main { background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('Robby') center/cover; }
+        #lobby-select { background: rgba(0,0,0,0.95); display: none; }
+        .char-card { width: 110px; padding: 15px; margin: 8px; border: 2px solid #555; border-radius: 12px; cursor: pointer; }
+        
+        /* 컷인 연출 */
+        #fx-cutin { position: absolute; width: 140%; height: 250px; top: 50%; left: 50%; transform: translate(-150%, -50%) skewX(-20deg); 
+                     background-size: cover; background-position: center; z-index: 201; opacity: 0; border: 8px solid gold; transition: 0.5s; }
+        
+        #ui-bar { position: absolute; top: 0; width: 100%; height: 60px; background: white; display: none; align-items: center; justify-content: space-between; padding: 0 20px; box-sizing: border-box; border-bottom: 3px solid #333; z-index: 50; }
+        #skill-gauge-container { width: 120px; height: 12px; background: #eee; border: 2px solid #333; border-radius: 6px; overflow: hidden; }
+        #skill-gauge { width: 0%; height: 100%; background: orange; transition: 0.2s; }
+        
+        #game-container { width: 100%; height: 250px; background: white; display: none; position: relative; margin-top: 100px; }
+        #player { width: 50px; height: 50px; position: absolute; bottom: 0; left: 60px; background-size: contain; background-repeat: no-repeat; z-index: 10; transition: filter 0.3s; }
+        #obstacle { width: 45px; height: 45px; position: absolute; bottom: 0; background: url('샤를 로켓.png') center/cover; z-index: 5; }
+    </style>
+</head>
+<body>
+<div id="main-wrapper">
+    <header><h1>👁️ GEASS RUN</h1></header>
+    <div id="game-area" tabindex="0">
+        <div id="fx-cutin"></div>
+        <div id="lobby-main" class="overlay">
+            <button style="padding:12px 25px; background:red; color:white; border:none; border-radius:8px; cursor:pointer;" onclick="showSelect()">START MISSION</button>
+        </div>
+        <div id="lobby-select" class="overlay">
+            <h3>SELECT YOUR GEASS</h3>
+            <div id="card-container" style="display:flex;"></div>
+        </div>
+        <div id="ui-bar">
+            <div id="score-ui" style="font-size:24px; font-weight:bold; color:#333;">0</div>
+            <div id="skill-gauge-container"><div id="skill-gauge"></div></div>
+        </div>
+        <div id="gameover" class="overlay" style="display:none; background:rgba(0,0,0,0.8);">
+            <h1 style="color:red;">FAILED</h1>
+            <button onclick="location.reload()">RETRY</button>
+        </div>
+        <div id="game-container">
+            <div id="player"></div>
+            <div id="obstacle"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const FILE_MAP = {"blue": "R.png", "red": "OIP.png", "purple": "GZN7HXW.png", "green": "WMq4hw2.png", "cutin_blue": "images_1.jpeg", "cutin_red": "cutin_red.webp", "cutin_purple": "images_2.jpeg", "cutin_green": "cutin_green.webp", "obs": "\uc0e4\ub97c \ub85c\ucf13.png", "lobby": "Robby", "bgm": "Colors.mp3"};
+    const chars = [
+        { id: 'blue', name: '절대방어', color: '#0066ff' }, // 무적
+        { id: 'red', name: '공간파괴', color: '#cc0000' }, // 장애물 즉시 제거
+        { id: 'purple', name: '시간정지', color: '#6600cc' }, // 느려짐
+        { id: 'green', name: '절대행운', color: '#008000' }  // 점수 대폭 상승
+    ];
+
+    let active = false, score = 0, obsPos = 700, obsSpeed = 8;
+    let jumpY = 0, velocityY = 0, gravity = 0.7, jumpCount = 0;
+    let skillGauge = 0, skillReady = false, isInvincible = false, charId = '';
+
+    function showSelect() {
+        document.getElementById('lobby-main').style.display = 'none';
+        document.getElementById('lobby-select').style.display = 'flex';
+        const container = document.getElementById('card-container');
+        container.innerHTML = "";
+        chars.forEach(c => {
+            const card = document.createElement('div');
+            card.className = 'char-card'; card.style.backgroundColor = c.color;
+            card.innerHTML = `<b>${c.name}</b>`;
+            card.onclick = () => { charId = c.id; startGame(); };
+            container.appendChild(card);
+        });
+    }
+
+    function startGame() {
+        document.getElementById('lobby-select').style.display = 'none';
+        document.getElementById('ui-bar').style.display = 'flex';
+        document.getElementById('game-container').style.display = 'block';
+        document.getElementById('player').style.backgroundImage = `url(${FILE_MAP[charId]})`;
+        active = true;
+        document.getElementById('game-area').focus();
+        loop();
+    }
+
+    function useSkill() {
+        if (!skillReady || !active) return;
+        skillReady = false; skillGauge = 0;
+        document.getElementById('skill-gauge').style.width = '0%';
+
+        // 컷인 연출
+        const cutin = document.getElementById('fx-cutin');
+        cutin.style.backgroundImage = `url(${FILE_MAP['cutin_' + charId]})`;
+        cutin.style.opacity = '1'; cutin.style.transform = 'translate(-50%, -50%) skewX(-20deg)';
+        
+        setTimeout(() => {
+            cutin.style.opacity = '0';
+            cutin.style.transform = 'translate(150%, -50%) skewX(-20deg)';
+            
+            // 능력 발동
+            if (charId === 'blue') {
+                isInvincible = true;
+                document.getElementById('player').style.filter = 'drop-shadow(0 0 15px gold) brightness(1.5)';
+                setTimeout(() => { isInvincible = false; document.getElementById('player').style.filter = ''; }, 5000);
+            } else if (charId === 'red') {
+                obsPos = 800; score += 5; // 장애물 저 멀리 보내기
+            } else if (charId === 'purple') {
+                const originalSpeed = obsSpeed; obsSpeed = 3;
+                setTimeout(() => { obsSpeed = originalSpeed; }, 5000);
+            } else if (charId === 'green') {
+                score += 15;
+            }
+            
+            setTimeout(() => { cutin.style.transform = 'translate(-150%, -50%) skewX(-20deg)'; }, 500);
+        }, 800);
+    }
+
+    function loop() {
+        if(!active) return;
+
+        velocityY += gravity; jumpY += velocityY;
+        if(jumpY > 0) { jumpY = 0; velocityY = 0; jumpCount = 0; }
+        document.getElementById('player').style.bottom = (-jumpY) + 'px';
+
+        obsPos -= obsSpeed;
+        if(obsPos < -50) {
+            obsPos = 750; score++; obsSpeed += 0.1;
+            if(skillGauge < 100) {
+                skillGauge += 25; // 장애물 4개 피하면 스킬 충전
+                if(skillGauge >= 100) { skillGauge = 100; skillReady = true; }
+                document.getElementById('skill-gauge').style.width = skillGauge + '%';
+            }
+        }
+        document.getElementById('obstacle').style.left = obsPos + 'px';
+        document.getElementById('score-ui').innerText = score;
+
+        const p = document.getElementById('player').getBoundingClientRect();
+        const o = document.getElementById('obstacle').getBoundingClientRect();
+        if (!isInvincible && p.right > o.left + 10 && p.left < o.right - 10 && p.bottom > o.top + 10) {
+            active = false; document.getElementById('gameover').style.display = 'flex';
+        }
+        requestAnimationFrame(loop);
+    }
+
+    document.getElementById('game-area').onkeydown = (e) => {
+        if(e.code === 'Space') { e.preventDefault(); if(jumpCount < 2) { velocityY = -12; jumpCount++; } }
+        if(e.code === 'Enter' || e.key === 'q' || e.key === 'Q') useSkill();
+    };
+</script>
+</body>
+</html>
