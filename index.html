@@ -1,0 +1,200 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GEASS RUN - Final Edition</title>
+    <style>
+        body { margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; background: #000; overflow: hidden; }
+        #game-area { width: 600px; height: 350px; position: relative; font-family: 'Malgun Gothic', sans-serif; background: #111; overflow: hidden; border: 4px solid #333; border-radius: 15px; outline:none; }
+        
+        .overlay { width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; }
+        
+        /* 이펙트 */
+        #fx-flash { position: absolute; inset: 0; background: red; opacity: 0; z-index: 200; pointer-events: none; }
+        #fx-cutin { position: absolute; width: 120%; height: 250px; top: 50%; left: 50%; transform: translate(-150%, -50%) skewX(-20deg); 
+                     background-size: cover; background-position: center; z-index: 201; opacity: 0; border: 10px solid gold; transition: 0.6s cubic-bezier(0.23, 1, 0.32, 1); }
+        
+        /* 로비 & 선택 */
+        #lobby-main { background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('lobby_bg.jpg'); background-size: cover; }
+        #lobby-select { background: rgba(0,0,0,0.9); display: none; }
+        .char-card { width: 110px; padding: 15px; margin: 10px; cursor: pointer; border-radius: 15px; border: 2px solid #444; transition: 0.3s; text-align: center; }
+        .char-card:hover { transform: scale(1.1); border-color: gold; box-shadow: 0 0 20px gold; }
+        
+        /* 게임 화면 */
+        #game-container { width: 100%; height: 220px; position: relative; background: #fff; display: none; margin-top: 80px; }
+        #player { width: 50px; height: 50px; position: absolute; bottom: 0; left: 60px; background-size: contain; background-repeat: no-repeat; z-index: 10; }
+        #obstacle { width: 45px; height: 45px; position: absolute; bottom: 0; background-image: url('IMG_0071.PNG'); background-size: contain; background-repeat: no-repeat; }
+        
+        /* UI */
+        #ui-bar { position: absolute; top: 0; width: 100%; height: 80px; display: none; align-items: center; justify-content: space-between; padding: 0 30px; box-sizing: border-box; background: white; border-bottom: 4px solid #222; }
+        #skill-gauge-container { width: 160px; height: 20px; background: #ddd; border: 3px solid #222; border-radius: 10px; overflow: hidden; }
+        #skill-gauge { width: 0%; height: 100%; background: linear-gradient(90deg, #ff0000, #ffcc00); transition: 0.1s; }
+        
+        .btn-play { padding: 15px 40px; font-size: 22px; font-weight: 900; background: #e74c3c; color: white; border: none; border-radius: 50px; cursor: pointer; box-shadow: 0 5px 0 #c0392b; }
+        .btn-play:active { transform: translateY(3px); box-shadow: none; }
+    </style>
+</head>
+<body>
+
+<div id="game-area" tabindex="0">
+    <div id="fx-flash"></div>
+    <div id="fx-cutin"></div>
+
+    <div id="lobby-main" class="overlay">
+        <h1 style="font-size:50px; text-shadow: 0 0 20px red;">GEASS RUN</h1>
+        <button class="btn-play" onclick="showSelect()">ALL HAIL LELOUCH!</button>
+    </div>
+
+    <div id="lobby-select" class="overlay">
+        <h2>SELECT YOUR STRATEGY</h2>
+        <div style="display: flex;" id="card-container"></div>
+    </div>
+
+    <div id="ui-bar">
+        <div id="hp-ui" style="font-size:30px;"></div>
+        <div id="score-ui" style="font-size:30px; font-weight:900;">0</div>
+        <div id="skill-gauge-container"><div id="skill-gauge"></div></div>
+    </div>
+
+    <div id="gameover" class="overlay" style="display:none; background:rgba(0,0,0,0.85);">
+        <h1 style="color:red; font-size:40px;">MISSION FAILED</h1>
+        <button class="btn-play" onclick="location.reload()">RE-STRATEGIZE</button>
+    </div>
+
+    <div id="game-container">
+        <div id="player"></div>
+        <div id="obstacle"></div>
+    </div>
+
+    <audio id="bgm" loop src="bgm.mp3"></audio>
+</div>
+
+<script>
+    // 데이터 설정
+    const IMGS = {"blue": "R.png", "red": "OIP.png", "purple": "GZN7HXW.png", "green": "WMq4hw2.png"};
+    const CUTINS = {"blue": "images_1.jpeg", "red": "cutin_red.webp", "purple": "images_2.jpeg", "green": "cutin_green.webp"};
+    
+    let active = false, score = 0, hp = 3, maxHp = 3, obsPos = 700, obsSpeed = 8;
+    let skillGauge = 0, skillReady = false, isInvincible = false, charId = '';
+    let jumpY = 0, velocityY = 0, gravity = 0.7;
+
+    const gameArea = document.getElementById('game-area');
+    const p = document.getElementById('player'), o = document.getElementById('obstacle');
+    const bgm = document.getElementById('bgm'), sGauge = document.getElementById('skill-gauge');
+
+    const chars = [
+        { id: 'blue', name: '절대방어', type: 'invincible', hp: 3, color: '#0066ff' },
+        { id: 'red', name: '붕괴', type: 'destroy', hp: 2, color: '#cc0000' },
+        { id: 'purple', name: '정지', type: 'slow', hp: 4, color: '#6600cc' },
+        { id: 'green', name: '행운', type: 'bonus', hp: 1, color: '#008000' }
+    ];
+
+    function showSelect() {
+        document.getElementById('lobby-main').style.display = 'none';
+        document.getElementById('lobby-select').style.display = 'flex';
+        const container = document.getElementById('card-container');
+        if(container.innerHTML === "") {
+            chars.forEach(c => {
+                const card = document.createElement('div');
+                card.className = 'char-card'; card.style.background = c.color;
+                card.onclick = () => { charId = c.id; maxHp = c.hp; startGame(); };
+                card.innerHTML = `<b>${c.name}</b><br><small>HP: ${c.hp}</small>`;
+                container.appendChild(card);
+            });
+        }
+    }
+
+    function startGame() {
+        document.getElementById('lobby-select').style.display = 'none';
+        document.getElementById('ui-bar').style.display = 'flex';
+        document.getElementById('game-container').style.display = 'block';
+        p.style.backgroundImage = `url(${IMGS[charId]})`;
+        hp = maxHp; updateHP();
+        active = true;
+        bgm.play();
+        gameArea.focus();
+        loop();
+    }
+
+    function updateHP() {
+        document.getElementById('hp-ui').innerText = "🔴".repeat(hp);
+    }
+
+    function jump() { if(jumpY === 0 && active) velocityY = -14; }
+
+    function useSkill() {
+        if(!skillReady || !active) return;
+        skillReady = false; skillGauge = 0;
+        
+        // 컷인 연출
+        const cutin = document.getElementById('fx-cutin');
+        cutin.style.backgroundImage = `url(${CUTINS[charId]})`;
+        cutin.style.opacity = '1'; cutin.style.transform = 'translate(-50%, -50%) skewX(-20deg)';
+        
+        setTimeout(() => {
+            cutin.style.opacity = '0'; 
+            cutin.style.transform = 'translate(100%, -50%) skewX(-20deg)';
+            setTimeout(() => cutin.style.transform = 'translate(-150%, -50%) skewX(-20deg)', 600);
+            
+            // 기아스 능력 발동
+            if(charId === 'blue') { 
+                isInvincible = true; p.style.filter = 'drop-shadow(0 0 10px gold)';
+                setTimeout(() => { isInvincible = false; p.style.filter = ''; }, 4000);
+            } else if(charId === 'red') {
+                obsPos = 700; score += 5; flash('white');
+            } else if(charId === 'purple') {
+                const oldSpeed = obsSpeed; obsSpeed = 3;
+                setTimeout(() => obsSpeed = oldSpeed, 5000);
+            } else if(charId === 'green') {
+                score += 20; flash('gold');
+            }
+        }, 800);
+    }
+
+    function flash(color) {
+        const f = document.getElementById('fx-flash');
+        f.style.background = color; f.style.opacity = '0.5';
+        setTimeout(() => f.style.opacity = '0', 300);
+    }
+
+    function loop() {
+        if(!active) return;
+        
+        // 중력 처리
+        velocityY += gravity; jumpY += velocityY;
+        if(jumpY > 0) { jumpY = 0; velocityY = 0; }
+        p.style.bottom = (-jumpY) + 'px';
+        
+        // 장애물 이동
+        obsPos -= obsSpeed;
+        if(obsPos < -60) { 
+            obsPos = 700; score++; 
+            obsSpeed += 0.1;
+            if(skillGauge < 100) {
+                skillGauge += 20;
+                if(skillGauge >= 100) { skillGauge = 100; skillReady = true; }
+                sGauge.style.width = skillGauge + '%';
+            }
+        }
+        o.style.left = obsPos + 'px';
+        
+        // 충돌 체크
+        const pRect = p.getBoundingClientRect(), oRect = o.getBoundingClientRect();
+        if(!isInvincible && pRect.right > oRect.left + 10 && pRect.left < oRect.right - 10 && pRect.bottom > oRect.top + 10) {
+            hp--; updateHP(); obsPos = 700; flash('red');
+            if(hp <= 0) { active = false; document.getElementById('gameover').style.display = 'flex'; bgm.pause(); }
+        }
+
+        document.getElementById('score-ui').innerText = score;
+        requestAnimationFrame(loop);
+    }
+
+    gameArea.onkeydown = (e) => {
+        if(e.code === 'Space') jump();
+        if(e.code === 'Enter' || e.key === 'q' || e.key === 'Q') useSkill();
+    };
+</script>
+</body>
+</html>
